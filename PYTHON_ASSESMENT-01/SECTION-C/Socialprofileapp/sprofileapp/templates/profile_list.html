@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile List</title>
+</head>
+<body>
+
+<h2>All Profiles</h2>
+
+<a href="{% url 'create_profile' %}">
+Create Profile
+</a>
+
+<br><br>
+
+<a href="{% url 'export_csv' %}">
+Export CSV
+</a>
+
+<hr>
+
+<table border="1">
+
+<tr>
+    <th>Username</th>
+    <th>Age</th>
+    <th>Email</th>
+    <th>Public</th>
+</tr>
+
+{% for profile in profiles %}
+
+<tr>
+    <td>{{ profile.username }}</td>
+    <td>{{ profile.age }}</td>
+    <td>{{ profile.email }}</td>
+    <td>{{ profile.is_public }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>
