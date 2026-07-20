@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Movie Reviews</title>
+</head>
+
+<body>
+
+<h1>Movie Reviews</h1>
+
+<table border="1">
+
+<tr>
+    <th>Movie</th>
+    <th>Reviewer</th>
+    <th>Review</th>
+</tr>
+
+{% for review in reviews %}
+
+<tr>
+
+<td>{{ review.movie_name }}</td>
+
+<td>{{ review.reviewer }}</td>
+
+<td>{{ review.review }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+
+</html>

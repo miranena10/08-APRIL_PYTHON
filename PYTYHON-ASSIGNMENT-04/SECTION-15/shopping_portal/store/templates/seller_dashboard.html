@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seller Dashboard</title>
+</head>
+<body>
+
+<h1>Seller Dashboard</h1>
+
+<h3>Welcome {{ request.user.username }}</h3>
+
+<ul>
+    <li><a href="{% url 'post_product' %}">Post Product</a></li>
+    <li><a href="{% url 'my_orders' %}">View Orders</a></li>
+    <li><a href="{% url 'logout' %}">Logout</a></li>
+</ul>
+
+</body>
+</html>
