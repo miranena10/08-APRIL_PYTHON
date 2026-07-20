@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flipkart Product List</title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            margin:40px;
+            background:#f2f2f2;
+        }
+
+        h2{
+            color:#2874F0;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+        }
+
+        th,td{
+            border:1px solid #ddd;
+            padding:12px;
+            text-align:center;
+        }
+
+        th{
+            background:#2874F0;
+            color:white;
+        }
+
+        a{
+            text-decoration:none;
+            padding:8px 15px;
+            border-radius:5px;
+        }
+
+        .add{
+            background:green;
+            color:white;
+        }
+
+        .edit{
+            background:orange;
+            color:white;
+        }
+
+        button{
+            background:red;
+            color:white;
+            border:none;
+            padding:8px 15px;
+            cursor:pointer;
+            border-radius:5px;
+        }
+
+        #message{
+            margin:15px 0;
+            font-weight:bold;
+            color:green;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<h2>Flipkart Product List</h2>
+
+<a href="{% url 'add_product' %}" class="add">
+Add Product
+</a>
+
+<div id="message"></div>
+
+<br><br>
+
+<table>
+
+<tr>
+
+    <th>ID</th>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Category</th>
+    <th>Edit</th>
+    <th>Delete</th>
+
+</tr>
+
+{% for product in products %}
+
+<tr id="row{{product.id}}">
+
+    <td>{{product.id}}</td>
+
+    <td>{{product.name}}</td>
+
+    <td>₹ {{product.price}}</td>
+
+    <td>{{product.category}}</td>
+
+    <td>
+
+        <a href="{% url 'edit_product' product.id %}" class="edit">
+            Edit
+        </a>
+
+    </td>
+
+    <td>
+
+        <button onclick="deleteProduct({{product.id}})">
+            Delete
+        </button>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="6">
+
+No Products Available
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+<script>
+
+function deleteProduct(id){
+
+    if(confirm("Are you sure you want to delete this product?")){
+
+        fetch("/delete/"+id+"/",{
+
+            method:"DELETE",
+
+            headers:{
+
+                "X-CSRFToken":"{{ csrf_token }}"
+
+            }
+
+        })
+
+        .then(response=>response.json())
+
+        .then(data=>{
+
+            if(data.success){
+
+                document.getElementById("row"+id).remove();
+
+                document.getElementById("message").innerHTML=data.message;
+
+            }
+
+        });
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
