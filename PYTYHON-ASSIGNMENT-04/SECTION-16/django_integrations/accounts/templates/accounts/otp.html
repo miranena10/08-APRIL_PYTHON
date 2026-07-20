@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email OTP Verification</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="card">
+
+<h2>Email OTP Verification</h2>
+
+<form method="POST">
+
+    {% csrf_token %}
+
+    <input type="email"
+           name="email"
+           placeholder="Enter Email"
+           required>
+
+    <button type="submit">
+        Send OTP
+    </button>
+
+</form>
+
+<hr>
+
+<form action="/verify/" method="POST">
+
+    {% csrf_token %}
+
+    <input type="email"
+           name="email"
+           placeholder="Enter Email"
+           required>
+
+    <input type="text"
+           name="otp"
+           placeholder="Enter OTP"
+           required>
+
+    <button type="submit">
+        Verify OTP
+    </button>
+
+</form>
+
+<h3>{{ message }}</h3>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,sans-serif;
+        }
+
+        body{
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .card{
+            width:420px;
+            background:#fff;
+            padding:40px;
+            border-radius:15px;
+            text-align:center;
+            box-shadow:0 10px 25px rgba(0,0,0,.3);
+        }
+
+        h1{
+            color:#4CAF50;
+            margin-bottom:15px;
+        }
+
+        h2{
+            color:#333;
+            margin-bottom:20px;
+        }
+
+        p{
+            font-size:18px;
+            color:#555;
+            margin:10px 0;
+        }
+
+        .success{
+            color:green;
+            font-weight:bold;
+            margin-top:20px;
+        }
+
+        a{
+            display:inline-block;
+            margin-top:25px;
+            padding:12px 25px;
+            background:#4CAF50;
+            color:white;
+            text-decoration:none;
+            border-radius:8px;
+        }
+
+        a:hover{
+            background:#388E3C;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="card">
+
+<h1>🎉 Dashboard</h1>
+
+<h2>Welcome {{ username }}</h2>
+
+<p>Email :</p>
+
+<p><b>{{ email }}</b></p>
+
+<p class="success">
+OTP Verified Successfully ✅
+</p>
+
+<a href="/">Home</a>
+
+</div>
+
+</body>
+</html>
