@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>My Playlist App</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',Arial,sans-serif;
+}
+
+
+body{
+
+    min-height:100vh;
+    background:linear-gradient(135deg,#141e30,#243b55);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+}
+
+
+/* Main Card */
+
+.container{
+
+    width:850px;
+    background:rgba(255,255,255,0.1);
+
+    backdrop-filter:blur(15px);
+
+    padding:40px;
+
+    border-radius:25px;
+
+    box-shadow:0 20px 40px rgba(0,0,0,0.4);
+
+    color:white;
+
+}
+
+
+/* Header */
+
+.header{
+
+    text-align:center;
+    margin-bottom:35px;
+
+}
+
+
+.logo{
+
+    font-size:70px;
+
+}
+
+
+h1{
+
+    font-size:40px;
+    margin-top:10px;
+
+}
+
+
+.header p{
+
+    color:#ddd;
+    margin-top:10px;
+    font-size:18px;
+
+}
+
+
+/* Songs */
+
+
+.song-list{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:20px;
+
+}
+
+
+
+.song{
+
+    background:white;
+
+    color:#333;
+
+    padding:20px;
+
+    border-radius:18px;
+
+    text-align:center;
+
+    transition:0.3s;
+
+}
+
+
+
+.song:hover{
+
+    transform:translateY(-10px);
+
+    box-shadow:0 15px 25px rgba(0,0,0,0.3);
+
+}
+
+
+
+.cover{
+
+    width:100px;
+
+    height:100px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:45px;
+
+    background:linear-gradient(135deg,#667eea,#764ba2);
+
+}
+
+
+.song h3{
+
+    margin-top:15px;
+
+}
+
+
+
+.song p{
+
+    color:#777;
+
+    margin:8px;
+
+}
+
+
+/* Button */
+
+.play{
+
+
+    display:inline-block;
+
+    margin-top:10px;
+
+    background:#667eea;
+
+    color:white;
+
+    padding:10px 25px;
+
+    border-radius:25px;
+
+    text-decoration:none;
+
+}
+
+
+
+.play:hover{
+
+    background:#764ba2;
+
+}
+
+
+
+/* Footer */
+
+
+.footer{
+
+    text-align:center;
+
+    margin-top:35px;
+
+    color:#ccc;
+
+}
+
+
+.admin{
+
+    display:inline-block;
+
+    margin-top:20px;
+
+    color:white;
+
+    text-decoration:none;
+
+    background:#ff4757;
+
+    padding:12px 30px;
+
+    border-radius:30px;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<div class="header">
+
+
+<div class="logo">
+🎧
+</div>
+
+
+<h1>
+My Playlist App
+</h1>
+
+
+<p>
+Create, manage and enjoy your favourite songs 🎵
+</p>
+
+
+</div>
+
+
+
+<div class="song-list">
+
+
+
+<div class="song">
+
+<div class="cover">
+🎶
+</div>
+
+<h3>
+Perfect
+</h3>
+
+<p>
+Ed Sheeran
+</p>
+
+<a class="play">
+▶ Play
+</a>
+
+</div>
+
+
+
+
+
+<div class="song">
+
+<div class="cover">
+🔥
+</div>
+
+<h3>
+Kesariya
+</h3>
+
+<p>
+Arijit Singh
+</p>
+
+<a class="play">
+▶ Play
+</a>
+
+</div>
+
+
+
+
+
+<div class="song">
+
+<div class="cover">
+💙
+</div>
+
+<h3>
+Until I Found You
+</h3>
+
+<p>
+Stephen Sanchez
+</p>
+
+<a class="play">
+▶ Play
+</a>
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+<div class="footer">
+
+
+<a href="/admin/" class="admin">
+Admin Panel
+</a>
+
+
+<p style="margin-top:20px;">
+Django + PythonAnywhere Deployment 🚀
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+</body>
+
+</html>
