@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Capstone Integration Hub - Dashboard{% endblock %}
+
+{% block content %}
+<div class="hub-header">
+    <h1 class="hub-title">Capstone Integration Hub</h1>
+    <p class="hub-subtitle">Explore a collection of integrated high-fidelity prototypes demonstrating database searching, timed multi-factor authentication, profile management, and interactive geolocation APIs.</p>
+</div>
+
+<div class="grid-2">
+    <!-- Restaurant Search -->
+    <div class="card hub-card">
+        <div class="hub-card-icon" style="color: var(--accent-rose);">
+            <i class="fa-solid fa-utensils"></i>
+        </div>
+        <h2 class="hub-card-title">Zomato-style Restaurant Search</h2>
+        <p class="hub-card-desc">Search for restaurants in real-time by location and cuisine. Try clicking pre-populated search chips like "Italian" or "Mumbai" to find matching venues with ratings, pricing, and amenities.</p>
+        <div>
+            <a href="/restaurants/search/" class="btn btn-rose"><i class="fa-solid fa-magnifying-glass"></i> Explore Restaurants</a>
+        </div>
+    </div>
+
+    <!-- Movie Booking & OTP -->
+    <div class="card hub-card">
+        <div class="hub-card-icon" style="color: var(--accent-blue);">
+            <i class="fa-solid fa-ticket"></i>
+        </div>
+        <h2 class="hub-card-title">Movie Ticket OTP System</h2>
+        <p class="hub-card-desc">Experience registration, login, and secure 6-digit OTP verification. The system enforces a strict 3-minute time-to-live countdown. After verification, access the booking dashboard with seat layouts.</p>
+        <div>
+            <a href="/accounts/dashboard/" class="btn btn-primary"><i class="fa-solid fa-key"></i> Launch Booking App</a>
+        </div>
+    </div>
+
+    <!-- Cab Booking Google Maps -->
+    <div class="card hub-card">
+        <div class="hub-card-icon" style="color: var(--accent-amber);">
+            <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <h2 class="hub-card-title">Cab Booking Geolocation Map</h2>
+        <p class="hub-card-desc">Integrates geolocation services to find your location, reverse-geocode your pickup point on click, select car types, calculate dynamic prices, and watch a car marker animate along your route.</p>
+        <div>
+            <a href="/maps/" class="btn btn-secondary" style="background-color: var(--accent-amber); color: var(--bg-primary);"><i class="fa-solid fa-location-arrow"></i> Open Map Page</a>
+        </div>
+    </div>
+
+    <!-- Flipkart Profile Management -->
+    <div class="card hub-card">
+        <div class="hub-card-icon" style="color: var(--accent-emerald);">
+            <i class="fa-solid fa-user-gear"></i>
+        </div>
+        <h2 class="hub-card-title">Flipkart-style Profile Manager</h2>
+        <p class="hub-card-desc">Manage user credentials, personal contact data, multiple shipping/delivery addresses, and upload profile pictures. Uploaded pictures are immediately saved and displayed with clean thumbnails.</p>
+        <div>
+            <a href="/profile/" class="btn btn-emerald"><i class="fa-solid fa-id-card"></i> Manage Profile</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

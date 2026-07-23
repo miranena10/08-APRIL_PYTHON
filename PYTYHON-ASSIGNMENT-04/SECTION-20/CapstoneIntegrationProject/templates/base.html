@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Capstone Integration Hub{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <i class="fa-solid fa-layer-group"></i> CapstoneHub
+        </a>
+        <ul class="navbar-nav">
+            <li><a href="/restaurants/search/" class="nav-link {% if 'restaurants' in request.path %}active{% endif %}"><i class="fa-solid fa-utensils"></i> Zomato Search</a></li>
+            <li><a href="/accounts/dashboard/" class="nav-link {% if 'accounts' in request.path %}active{% endif %}"><i class="fa-solid fa-ticket"></i> Movie Booking</a></li>
+            <li><a href="/maps/" class="nav-link {% if 'maps' in request.path %}active{% endif %}"><i class="fa-solid fa-map-location-dot"></i> Cab Booking</a></li>
+            <li><a href="/profile/" class="nav-link {% if 'profile' in request.path %}active{% endif %}"><i class="fa-solid fa-user-gear"></i> Flipkart Profile</a></li>
+            
+            {% if user.is_authenticated %}
+                <li><span class="nav-link" style="color: var(--text-primary);"><i class="fa-solid fa-user"></i> {{ user.username }}</span></li>
+                <li><a href="/accounts/logout/" class="nav-btn btn-rose" style="padding: 0.4rem 1rem; font-size: 0.85rem;"><i class="fa-solid fa-sign-out-alt"></i> Logout</a></li>
+            {% else %}
+                <li><a href="/accounts/login/" class="nav-link"><i class="fa-solid fa-sign-in-alt"></i> Login</a></li>
+                <li><a href="/accounts/register/" class="nav-btn"><i class="fa-solid fa-user-plus"></i> Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Capstone Integration Hub. Designed with premium aesthetics and smooth animations.</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

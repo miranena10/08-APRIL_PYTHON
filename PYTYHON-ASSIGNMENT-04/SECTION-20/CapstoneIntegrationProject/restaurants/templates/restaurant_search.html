@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Zomato-style Restaurant Search{% endblock %}
+
+{% block content %}
+<div class="search-header">
+    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--text-primary);"><i class="fa-solid fa-utensils" style="color: var(--accent-rose);"></i> Food Finder</h1>
+    <p style="color: var(--text-secondary);">Discover the best food & drinks in your city</p>
+</div>
+
+<div class="card" style="margin-bottom: 3rem; padding: 1.5rem;">
+    <form method="GET" action="{% url 'search_restaurant' %}">
+        <div class="search-box-wrapper" style="max-width: 100%; display: flex; gap: 1rem; margin-bottom: 0;">
+            <div style="position: relative; flex: 1;">
+                <i class="fa-solid fa-magnifying-glass search-icon" style="color: var(--text-secondary); left: 1.25rem;"></i>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search for restaurant name, cuisine or location..." class="form-control search-control" style="padding-left: 3rem; height: 50px;">
+            </div>
+            
+            {% if selected_cuisine or selected_location or query %}
+                <a href="{% url 'search_restaurant' %}" class="btn btn-secondary" style="height: 50px;"><i class="fa-solid fa-xmark"></i> Clear</a>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-rose" style="height: 50px; padding: 0 2rem;"><i class="fa-solid fa-search"></i> Search</button>
+        </div>
+        
+        <!-- Hidden fields to preserve tags when searching via text -->
+        {% if selected_cuisine %}<input type="hidden" name="cuisine" value="{{ selected_cuisine }}">{% endif %}
+        {% if selected_location %}<input type="hidden" name="location" value="{{ selected_location }}">{% endif %}
+    </form>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-chips-container" style="margin-bottom: 2rem;">
+    <h4 style="margin-bottom: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;"><i class="fa-solid fa-filter"></i> Filter by Cuisine:</h4>
+    <div class="filter-chips" style="justify-content: flex-start; margin-bottom: 1.5rem;">
+        <a href="?q={{ query }}&location={{ selected_location }}" class="filter-chip {% if not selected_cuisine %}active{% endif %}">All Cuisines</a>
+        {% for cuisine in all_cuisines %}
+            <a href="?q={{ query }}&cuisine={{ cuisine }}&location={{ selected_location }}" class="filter-chip {% if selected_cuisine == cuisine %}active{% endif %}">{{ cuisine }}</a>
+        {% endfor %}
+    </div>
+
+    <h4 style="margin-bottom: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em;"><i class="fa-solid fa-location-dot"></i> Filter by City:</h4>
+    <div class="filter-chips" style="justify-content: flex-start; margin-bottom: 0;">
+        <a href="?q={{ query }}&cuisine={{ selected_cuisine }}" class="filter-chip {% if not selected_location %}active{% endif %}">All Locations</a>
+        {% for location in all_locations %}
+            <a href="?q={{ query }}&cuisine={{ selected_cuisine }}&location={{ location }}" class="filter-chip {% if selected_location == location %}active{% endif %}">{{ location }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Results grid -->
+<h3 style="margin-bottom: 1.5rem; font-size: 1.5rem;">
+    {% if query or selected_cuisine or selected_location %}
+        Search Results ({{ restaurants|length }})
+    {% else %}
+        Popular Restaurants ({{ restaurants|length }})
+    {% endif %}
+</h3>
+
+{% if restaurants %}
+    <div class="grid-3">
+        {% for r in restaurants %}
+            <div class="card restaurant-card">
+                <!-- Assigning Unsplash food images based on cuisine type -->
+                <div class="restaurant-img" 
+                     {% if "italian" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "indian" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1585938338392-50a59970d8ee?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "japanese" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "mexican" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "french" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "chinese" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400&auto=format&fit=crop&q=60');"
+                     {% elif "american" in r.cuisine|lower %}
+                     style="background-image: url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=60');"
+                     {% else %}
+                     style="background-image: url('https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&auto=format&fit=crop&q=60');"
+                     {% endif %}>
+                     
+                     <!-- Seed different ratings based on restaurant name hash for realism -->
+                     <span class="restaurant-rating">
+                        {% if forloop.counter|divisibleby:3 %}
+                            4.8 <i class="fa-solid fa-star" style="font-size: 0.75rem;"></i>
+                        {% elif forloop.counter|divisibleby:2 %}
+                            4.5 <i class="fa-solid fa-star" style="font-size: 0.75rem;"></i>
+                        {% else %}
+                            4.2 <i class="fa-solid fa-star" style="font-size: 0.75rem;"></i>
+                        {% endif %}
+                     </span>
+                </div>
+                <div class="restaurant-info">
+                    <h3 class="restaurant-name">{{ r.name }}</h3>
+                    <p class="restaurant-cuisine"><i class="fa-solid fa-pizza-slice"></i> {{ r.cuisine }}</p>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <i class="fa-solid fa-location-dot"></i> {{ r.location }}
+                    </p>
+                    <div class="restaurant-meta">
+                        <span><i class="fa-solid fa-clock"></i> 25-35 mins</span>
+                        <span>
+                            {% if forloop.counter|divisibleby:3 %}
+                                $600 for two
+                            {% elif forloop.counter|divisibleby:2 %}
+                                $400 for two
+                            {% else %}
+                                $300 for two
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 4rem 2rem;">
+        <i class="fa-solid fa-store-slash" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1.5rem;"></i>
+        <h3 style="margin-bottom: 0.5rem;">No Restaurants Found</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">We couldn't find any restaurants matching your search criteria.</p>
+        <a href="{% url 'search_restaurant' %}" class="btn btn-rose"><i class="fa-solid fa-rotate-left"></i> View All Restaurants</a>
+    </div>
+{% endif %}
+{% endblock %}

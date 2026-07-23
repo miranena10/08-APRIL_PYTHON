@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Movie Ticket Booking{% endblock %}
+
+{% block content %}
+<div class="hub-header" style="margin-bottom: 2rem; text-align: left;">
+    <span class="badge badge-success"><i class="fa-solid fa-lock"></i> Secured with MFA</span>
+    <h1 style="font-size: 2.25rem; margin-top: 0.5rem;">CineBook Movie Tickets</h1>
+    <p style="color: var(--text-secondary);">Browse trending movies, select seats, and book your tickets instantly.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem;">
+    <!-- Main Panel: Movie Selection & Seating Map -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        
+        <!-- Movies List -->
+        <div class="card" style="padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-film" style="color: var(--accent-blue);"></i> Select Movie</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                {% for movie in movies %}
+                    <div class="movie-card" onclick="selectMovie('{{ movie.title }}', '{{ movie.genre }}', this)" 
+                         style="background-color: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 0.5rem; overflow: hidden; cursor: pointer; transition: all 0.2s;">
+                        <div style="height: 120px; background-image: url('{{ movie.image }}'); background-size: cover; background-position: center;"></div>
+                        <div style="padding: 0.75rem;">
+                            <h4 class="movie-title" style="font-size: 0.95rem; margin-bottom: 0.25rem;">{{ movie.title }}</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fa-solid fa-tags"></i> {{ movie.genre }}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.75rem;">
+                                <span style="color: var(--accent-amber);"><i class="fa-solid fa-star"></i> {{ movie.rating }}</span>
+                                <span style="color: var(--text-secondary);"><i class="fa-solid fa-clock"></i> {{ movie.duration }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Seating Layout Card -->
+        <div id="seatingCard" class="card" style="padding: 1.5rem; display: none;">
+            <h3 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-border-all" style="color: var(--accent-emerald);"></i> Seating Layout: <span id="seatingMovieTitle" style="color: var(--accent-blue);"></span></h3>
+            
+            <div class="theater-screen">Screen This Way</div>
+            
+            <div class="theater-seating">
+                <!-- Rows A to D with 8 seats each -->
+                {% for row in "ABCD"|make_list %}
+                    <div class="seating-row">
+                        <span style="width: 20px; font-weight: 700; color: var(--text-secondary); line-height: 25px;">{{ row }}</span>
+                        {% for col in "12345678"|make_list %}
+                            <!-- Seed occupied seats randomly using column index -->
+                            <div class="seat {% if col == '3' or col == '6' and row == 'B' or row == 'C' and col == '4' %}occupied{% endif %}" 
+                                 data-seat="{{ row }}{{ col }}" 
+                                 onclick="toggleSeat(this)">
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="seating-legend">
+                <div class="legend-item">
+                    <div class="legend-box" style="background-color: var(--bg-tertiary);"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background-color: var(--accent-emerald);"></div>
+                    <span>Selected</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background-color: rgba(244, 63, 94, 0.4);"></div>
+                    <span>Occupied</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Summary Side Panel -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="card" style="position: sticky; top: 90px; padding: 1.5rem;">
+            <h3><i class="fa-solid fa-receipt" style="color: var(--accent-amber);"></i> Booking Summary</h3>
+            
+            <div id="noSelectionText" style="color: var(--text-secondary); text-align: center; padding: 3rem 1rem;">
+                <i class="fa-solid fa-clapperboard" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>Select a movie and choose seats to begin booking tickets.</p>
+            </div>
+            
+            <div id="selectionSummary" style="display: none; margin-top: 1.5rem;">
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <h4 id="summaryMovieTitle" style="font-size: 1.1rem; color: var(--accent-blue);"></h4>
+                    <p id="summaryMovieGenre" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;"></p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">Selected Seats:</span>
+                    <span id="selectedSeatsLabel" style="font-weight: 700; color: var(--text-primary);">None</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">Price Per Seat:</span>
+                    <span style="font-weight: 700; color: var(--text-primary);">$12.00</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 1rem; font-size: 1.1rem;">
+                    <span style="font-weight: 600;">Total Cost:</span>
+                    <span id="totalCostLabel" style="font-weight: 800; color: var(--accent-emerald);">$0.00</span>
+                </div>
+                
+                <button onclick="bookTickets()" id="bookBtn" class="btn btn-emerald" style="width: 100%; height: 45px; margin-top: 1.5rem;" disabled>
+                    <i class="fa-solid fa-cart-shopping"></i> Complete Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Ticket Modal (Hidden by Default) -->
+<div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div class="card" style="width: 100%; max-width: 450px; text-align: center; border: 1px solid var(--accent-emerald); box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);">
+        <i class="fa-solid fa-circle-check" style="font-size: 3rem; color: var(--accent-emerald); margin-bottom: 1rem;"></i>
+        <h2 style="margin-bottom: 0.25rem;">Booking Confirmed!</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 2rem;">Here is your digital movie ticket</p>
+        
+        <!-- Ticket Visual -->
+        <div style="background-color: var(--bg-primary); border: 2px dashed var(--border-color); border-radius: 0.75rem; padding: 1.5rem; text-align: left; position: relative;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                <h4 style="color: var(--accent-blue); font-size: 1.1rem;" id="ticketMovie">Inception</h4>
+                <span class="badge badge-success">MFA Verified</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+                <div>
+                    <span>DATE & TIME</span>
+                    <div style="color: var(--text-primary); font-weight: 600; margin-top: 0.1rem;">Tonight, 8:30 PM</div>
+                </div>
+                <div>
+                    <span>SEATS</span>
+                    <div style="color: var(--text-primary); font-weight: 700; margin-top: 0.1rem;" id="ticketSeats">A3, A4</div>
+                </div>
+                <div>
+                    <span>AUDITORIUM</span>
+                    <div style="color: var(--text-primary); font-weight: 600; margin-top: 0.1rem;">Screen 4</div>
+                </div>
+                <div>
+                    <span>TOTAL PRICE</span>
+                    <div style="color: var(--accent-emerald); font-weight: 700; margin-top: 0.1rem;" id="ticketPrice">$24.00</div>
+                </div>
+            </div>
+            
+            <!-- Barcode Simulation -->
+            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 100%; height: 50px; background: linear-gradient(90deg, #fff 2px, transparent 2px, #fff 4px, transparent 6px, #fff 8px, transparent 12px, #fff 14px, transparent 15px, #fff 16px) repeat-x; background-size: 20px 100%;"></div>
+                <span style="font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.3em; margin-top: 0.25rem;">TICKET-ID: CB-{{ user.username|upper }}-9482</span>
+            </div>
+        </div>
+        
+        <button onclick="closeModal()" class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">
+            <i class="fa-solid fa-rectangle-xmark"></i> Close Window
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedMovieTitle = "";
+    let selectedMovieGenre = "";
+    let selectedSeats = [];
+    const pricePerSeat = 12.00;
+
+    function selectMovie(title, genre, cardElement) {
+        // Toggle selected styling on movie cards
+        document.querySelectorAll(".movie-card").forEach(card => {
+            card.style.borderColor = "var(--border-color)";
+            card.style.backgroundColor = "var(--bg-primary)";
+        });
+        
+        cardElement.style.borderColor = "var(--accent-blue)";
+        cardElement.style.backgroundColor = "rgba(59, 130, 246, 0.05)";
+        
+        selectedMovieTitle = title;
+        selectedMovieGenre = genre;
+        
+        // Reset seats
+        selectedSeats = [];
+        document.querySelectorAll(".seat.selected").forEach(seat => {
+            seat.classList.remove("selected");
+        });
+        
+        // Show seating layout card
+        document.getElementById("seatingCard").style.display = "block";
+        document.getElementById("seatingMovieTitle").innerText = title;
+        
+        // Update summary panels
+        document.getElementById("noSelectionText").style.display = "none";
+        document.getElementById("selectionSummary").style.display = "block";
+        document.getElementById("summaryMovieTitle").innerText = title;
+        document.getElementById("summaryMovieGenre").innerText = genre;
+        
+        updateSummary();
+    }
+
+    function toggleSeat(seatElement) {
+        if (seatElement.classList.contains("occupied")) return;
+        
+        const seatId = seatElement.getAttribute("data-seat");
+        
+        if (seatElement.classList.contains("selected")) {
+            seatElement.classList.remove("selected");
+            selectedSeats = selectedSeats.filter(s => s !== seatId);
+        } else {
+            seatElement.classList.add("selected");
+            selectedSeats.push(seatId);
+        }
+        
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const seatsLabel = document.getElementById("selectedSeatsLabel");
+        const costLabel = document.getElementById("totalCostLabel");
+        const bookBtn = document.getElementById("bookBtn");
+        
+        if (selectedSeats.length > 0) {
+            seatsLabel.innerText = selectedSeats.join(", ");
+            const totalCost = selectedSeats.length * pricePerSeat;
+            costLabel.innerText = "$" + totalCost.toFixed(2);
+            bookBtn.disabled = false;
+        } else {
+            seatsLabel.innerText = "None";
+            costLabel.innerText = "$0.00";
+            bookBtn.disabled = true;
+        }
+    }
+
+    function bookTickets() {
+        document.getElementById("ticketMovie").innerText = selectedMovieTitle;
+        document.getElementById("ticketSeats").innerText = selectedSeats.join(", ");
+        document.getElementById("ticketPrice").innerText = "$" + (selectedSeats.length * pricePerSeat).toFixed(2);
+        
+        document.getElementById("ticketModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("ticketModal").style.display = "none";
+        // Reset selections
+        selectedSeats = [];
+        document.querySelectorAll(".seat.selected").forEach(seat => {
+            seat.classList.remove("selected");
+        });
+        updateSummary();
+    }
+</script>
+{% endblock %}

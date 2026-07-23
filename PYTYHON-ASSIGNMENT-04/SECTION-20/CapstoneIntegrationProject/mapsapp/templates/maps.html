@@ -1,0 +1,511 @@
+{% extends 'base.html' %}
+
+{% block title %}Cab Booking - Google Maps Integration{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet.js CSS (used as fallback or for dual-mode) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    /* Styling to override default Leaflet container rules for dark mode styling */
+    .leaflet-container {
+        background: #020617;
+    }
+    .leaflet-bar a {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color) !important;
+    }
+    .leaflet-bar a:hover {
+        background-color: var(--bg-tertiary) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hub-header" style="margin-bottom: 2rem; text-align: left;">
+    <span class="badge badge-warning" style="background-color: rgba(245, 158, 11, 0.15); color: #fde047;"><i class="fa-solid fa-car"></i> Cab Booking App</span>
+    <h1 style="font-size: 2.25rem; margin-top: 0.5rem;">QuickCab Booking System</h1>
+    <p style="color: var(--text-secondary);">Allow geolocation access to find your current location, click on the map to choose your pickup point, and select your ride.</p>
+</div>
+
+<div class="map-container">
+    <!-- Left Pane: Address details & booking -->
+    <div class="booking-panel">
+        <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <i class="fa-solid fa-route" style="color: var(--accent-amber);"></i> Book A Ride
+        </h3>
+        
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <!-- Geolocation Button -->
+            <button onclick="locateUser()" class="btn btn-secondary" style="width: 100%; border: 1px solid var(--accent-blue); color: var(--accent-blue);">
+                <i class="fa-solid fa-location-crosshairs"></i> Detect Current Location
+            </button>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"><i class="fa-solid fa-circle-dot" style="color: var(--accent-emerald);"></i> Pickup Point</label>
+                <input type="text" id="pickup_input" class="form-control" placeholder="Select on map or type pickup..." readonly>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);"><i class="fa-solid fa-circle-info"></i> Click anywhere on the map to set pickup point.</span>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label"><i class="fa-solid fa-circle-dot" style="color: var(--accent-rose);"></i> Destination Point</label>
+                <select id="destination_select" onchange="calculateRoute()" class="form-control">
+                    <option value="" disabled selected>Select Destination</option>
+                    <option value="40.7580,-73.9855|Times Square" data-name="Times Square, NY">Times Square, NY (Downtown)</option>
+                    <option value="40.7484,-73.9857|Empire State" data-name="Empire State Building, NY">Empire State Building, NY</option>
+                    <option value="40.7829,-73.9654|Central Park" data-name="Central Park, NY">Central Park, NY (Uptown)</option>
+                    <option value="40.7061,-73.9969|Brooklyn Bridge" data-name="Brooklyn Bridge, NY">Brooklyn Bridge, NY</option>
+                </select>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <label class="form-label">Choose Ride Category</label>
+                <div class="vehicle-selector">
+                    <div class="vehicle-option selected" id="ecoOption" onclick="selectVehicle('eco', 1.2, this)">
+                        <div class="vehicle-option-icon" style="color: var(--text-primary);"><i class="fa-solid fa-taxi"></i></div>
+                        <div class="vehicle-name">Eco</div>
+                        <div class="vehicle-price" id="ecoPrice">$12.00</div>
+                    </div>
+                    <div class="vehicle-option" id="sedanOption" onclick="selectVehicle('sedan', 1.8, this)">
+                        <div class="vehicle-option-icon" style="color: var(--accent-blue);"><i class="fa-solid fa-car-side"></i></div>
+                        <div class="vehicle-name">Sedan</div>
+                        <div class="vehicle-price" id="sedanPrice">$18.00</div>
+                    </div>
+                    <div class="vehicle-option" id="suvOption" onclick="selectVehicle('suv', 2.5, this)">
+                        <div class="vehicle-option-icon" style="color: var(--accent-amber);"><i class="fa-solid fa-truck-monster"></i></div>
+                        <div class="vehicle-name">SUV</div>
+                        <div class="vehicle-price" id="suvPrice">$25.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 1rem; background-color: var(--bg-primary); border-color: var(--border-color); font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-secondary);">Distance Estimate:</span>
+                    <span id="distance_text" style="font-weight: 700;">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-secondary);">Est. Price:</span>
+                    <span id="price_text" style="font-weight: 700; color: var(--accent-emerald);">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Est. ETA:</span>
+                    <span id="eta_text" style="font-weight: 700;">--</span>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="confirmBooking()" id="bookBtn" class="btn btn-emerald" style="width: 100%; height: 45px; margin-top: 1.5rem;" disabled>
+            <i class="fa-solid fa-circle-check"></i> Request Ride Now
+        </button>
+    </div>
+
+    <!-- Right Pane: Map Element -->
+    <div class="map-pane" id="mapElement">
+        <!-- Floating Status Overlay -->
+        <div id="mapStatus" style="position: absolute; top: 1rem; left: 3rem; z-index: 1000; background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.85rem; font-weight: 600; box-shadow: var(--shadow-main); display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-satellite" style="color: var(--accent-blue);"></i> Map loading...
+        </div>
+        
+        <!-- Live Trip Overlay -->
+        <div id="tripOverlay" style="display: none; position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-emerald); padding: 1rem 2rem; border-radius: 0.75rem; font-size: 0.95rem; text-align: center; box-shadow: 0 0 25px rgba(16, 185, 129, 0.25); min-width: 280px;">
+            <div style="font-weight: 800; color: var(--accent-emerald); font-size: 1.1rem; margin-bottom: 0.25rem;"><i class="fa-solid fa-spinner fa-spin"></i> Trip in Progress</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem;" id="tripStatusText">Your ride is arriving in 5 seconds...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS Fallback -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    let map;
+    let pickupMarker;
+    let destMarker;
+    let cabMarker;
+    let routeLine;
+    
+    let pickupCoords = null;
+    let destCoords = null;
+    let priceRate = 1.2;
+    let distance = 0;
+    
+    let isGoogleMaps = false;
+    const gmapsKey = "{{ google_maps_api_key }}";
+
+    // Initialize Map
+    window.onload = function() {
+        const defaultLat = 40.7580; // Default: Times Square coordinates
+        const defaultLng = -73.9855;
+        
+        const mapStatus = document.getElementById("mapStatus");
+
+        if (gmapsKey) {
+            // Attempt to load Google Maps dynamically
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${gmapsKey}&callback=initGoogleMap`;
+            script.async = true;
+            script.defer = true;
+            script.onerror = function() {
+                initLeafletMap(defaultLat, defaultLng);
+                mapStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose);"></i> Google Maps API blocked. Loaded Leaflet Fallback.`;
+            };
+            document.head.appendChild(script);
+        } else {
+            // Load Leaflet map directly
+            initLeafletMap(defaultLat, defaultLng);
+            mapStatus.innerHTML = `<i class="fa-solid fa-satellite" style="color: var(--accent-emerald);"></i> Interactive Leaflet Map Active`;
+        }
+    };
+
+    // Google Maps Initializer
+    function initGoogleMap() {
+        isGoogleMaps = true;
+        document.getElementById("mapStatus").innerHTML = `<i class="fa-solid fa-satellite" style="color: var(--accent-emerald);"></i> Google Maps API Active`;
+        
+        const centerCoords = { lat: 40.7580, lng: -73.9855 };
+        map = new google.maps.Map(document.getElementById('mapElement'), {
+            center: centerCoords,
+            zoom: 14,
+            styles: [
+                { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
+                { elementType: 'labels.text.stroke', stylers: [{ color: '#1e293b' }] },
+                { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
+                { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
+                { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#334155' }] },
+                { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#020617' }] }
+            ]
+        });
+
+        // Set up click listener
+        map.addListener('click', function(e) {
+            setPickupLocation(e.latLng.lat(), e.latLng.lng());
+        });
+
+        // Geolocation on load
+        locateUser();
+    }
+
+    // Leaflet Maps Initializer (Fallback)
+    function initLeafletMap(lat, lng) {
+        isGoogleMaps = false;
+        
+        map = L.map('mapElement').setView([lat, lng], 14);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Click handler
+        map.on('click', function(e) {
+            setPickupLocation(e.latlng.lat, e.latlng.lng);
+        });
+
+        locateUser();
+    }
+
+    // Detect browser geolocation
+    function locateUser() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    if (isGoogleMaps) {
+                        map.setCenter({ lat: lat, lng: lng });
+                        map.setZoom(15);
+                    } else {
+                        map.setView([lat, lng], 15);
+                    }
+                    
+                    setPickupLocation(lat, lng);
+                },
+                function() {
+                    alert("Geolocation failed. Please select your pickup point on the map manually.");
+                }
+            );
+        } else {
+            alert("Geolocation not supported by this browser.");
+        }
+    }
+
+    // Set Pickup Location
+    function setPickupLocation(lat, lng) {
+        pickupCoords = { lat: lat, lng: lng };
+        
+        // Geocode coordinates (Get visual address text)
+        document.getElementById("pickup_input").value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+        fetchAddress(lat, lng);
+
+        // Create or move Marker
+        if (isGoogleMaps) {
+            if (pickupMarker) {
+                pickupMarker.setPosition(pickupCoords);
+            } else {
+                pickupMarker = new google.maps.Marker({
+                    position: pickupCoords,
+                    map: map,
+                    label: "P",
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: '#10b981',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 10
+                    }
+                });
+            }
+        } else {
+            if (pickupMarker) {
+                pickupMarker.setLatLng([lat, lng]);
+            } else {
+                const greenIcon = L.divIcon({
+                    html: '<div style="background-color: var(--accent-emerald); width:15px; height:15px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
+                    className: 'dummy',
+                    iconSize: [15, 15]
+                });
+                pickupMarker = L.marker([lat, lng], { icon: greenIcon }).addTo(map);
+            }
+        }
+
+        calculateRoute();
+    }
+
+    // Fetch Address (Reverse Geocoding simulation using OpenStreetMap Nominatim)
+    function fetchAddress(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    // Extract a shorter address
+                    const parts = data.display_name.split(',');
+                    const shortAddress = parts.slice(0, 3).join(',');
+                    document.getElementById("pickup_input").value = shortAddress;
+                }
+            })
+            .catch(() => {
+                // Ignore error and leave coords
+            });
+    }
+
+    // Vehicle Selector Function
+    function selectVehicle(category, rate, element) {
+        priceRate = rate;
+        
+        document.querySelectorAll(".vehicle-option").forEach(opt => {
+            opt.classList.remove("selected");
+        });
+        element.classList.add("selected");
+        
+        updateCalculations();
+    }
+
+    // Calculate route when Destination changes
+    function calculateRoute() {
+        const destSelect = document.getElementById("destination_select");
+        if (!destSelect.value || !pickupCoords) return;
+        
+        const coordsPart = destSelect.value.split('|')[0];
+        const destLat = parseFloat(coordsPart.split(',')[0]);
+        const destLng = parseFloat(coordsPart.split(',')[1]);
+        destCoords = { lat: destLat, lng: destLng };
+
+        // Draw destination marker
+        if (isGoogleMaps) {
+            if (destMarker) {
+                destMarker.setPosition(destCoords);
+            } else {
+                destMarker = new google.maps.Marker({
+                    position: destCoords,
+                    map: map,
+                    label: "D",
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: '#f43f5e',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 10
+                    }
+                });
+            }
+        } else {
+            if (destMarker) {
+                destMarker.setLatLng([destLat, destLng]);
+            } else {
+                const redIcon = L.divIcon({
+                    html: '<div style="background-color: var(--accent-rose); width:15px; height:15px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
+                    className: 'dummy',
+                    iconSize: [15, 15]
+                });
+                destMarker = L.marker([destLat, destLng], { icon: redIcon }).addTo(map);
+            }
+        }
+
+        // Calculate math distance
+        const R = 6371; // Earth Radius in km
+        const dLat = (destLat - pickupCoords.lat) * Math.PI / 180;
+        const dLon = (destLng - pickupCoords.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(pickupCoords.lat * Math.PI / 180) * Math.cos(destLat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        distance = R * c; // Distance in km
+
+        // Draw Route Polyline
+        if (isGoogleMaps) {
+            if (routeLine) routeLine.setMap(null);
+            routeLine = new google.maps.Polyline({
+                path: [pickupCoords, destCoords],
+                geodesic: true,
+                strokeColor: '#3b82f6',
+                strokeOpacity: 0.8,
+                strokeWeight: 4
+            });
+            routeLine.setMap(map);
+            
+            // Adjust bounds
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(pickupCoords);
+            bounds.extend(destCoords);
+            map.fitBounds(bounds);
+        } else {
+            if (routeLine) map.removeLayer(routeLine);
+            routeLine = L.polyline([[pickupCoords.lat, pickupCoords.lng], [destLat, destLng]], {
+                color: '#3b82f6',
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+            
+            // Adjust bounds
+            const group = new L.featureGroup([pickupMarker, destMarker]);
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        updateCalculations();
+        document.getElementById("bookBtn").disabled = false;
+    }
+
+    // Update calculations box
+    function updateCalculations() {
+        if (distance === 0) return;
+        
+        const price = distance * priceRate * 8; // scaling factor
+        const eta = Math.ceil(distance * 2.5); // 2.5 mins per km
+        
+        document.getElementById("distance_text").innerText = distance.toFixed(2) + " km";
+        document.getElementById("price_text").innerText = "$" + price.toFixed(2);
+        document.getElementById("eta_text").innerText = eta + " mins";
+        
+        // Update vehicle option prices based on distance for selection realism
+        document.getElementById("ecoPrice").innerText = "$" + (distance * 1.2 * 8).toFixed(2);
+        document.getElementById("sedanPrice").innerText = "$" + (distance * 1.8 * 8).toFixed(2);
+        document.getElementById("suvPrice").innerText = "$" + (distance * 2.5 * 8).toFixed(2);
+    }
+
+    // Confirm Booking & Trigger animation
+    function confirmBooking() {
+        if (!pickupCoords || !destCoords) return;
+        
+        const tripOverlay = document.getElementById("tripOverlay");
+        const tripStatusText = document.getElementById("tripStatusText");
+        const bookBtn = document.getElementById("bookBtn");
+        
+        bookBtn.disabled = true;
+        tripOverlay.style.display = "block";
+        tripStatusText.innerText = "Cab is arriving in 5 seconds...";
+        
+        // Create cab/car marker
+        if (isGoogleMaps) {
+            if (cabMarker) cabMarker.setMap(null);
+            cabMarker = new google.maps.Marker({
+                position: destCoords, // starts at destination to pick up user at pickup
+                map: map,
+                icon: {
+                    path: 'M25.39,19.74c-.58,0-1.12.37-1.3.96l-1.9,6.03H9.81l-1.9-6.03a1.365,1.365,0,0,0-1.3-.96H3.61c-.97,0-1.65.98-1.32,1.89l3.52,9.69A2.723,2.723,0,0,0,8.37,33.09h15.26a2.723,2.723,0,0,0,2.56-1.77l3.52-9.69c.33-.91-.35-1.89-1.32-1.89Z',
+                    fillColor: '#f59e0b',
+                    fillOpacity: 1,
+                    strokeColor: '#000000',
+                    strokeWeight: 1,
+                    scale: 0.8,
+                    anchor: new google.maps.Point(16, 16)
+                }
+            });
+        } else {
+            if (cabMarker) map.removeLayer(cabMarker);
+            const cabIcon = L.divIcon({
+                html: '<div style="background-color: var(--accent-amber); font-size: 1rem; width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #000; box-shadow:0 0 10px var(--accent-amber);"><i class="fa-solid fa-car" style="color:#000;"></i></div>',
+                className: 'dummy',
+                iconSize: [25, 25]
+            });
+            cabMarker = L.marker([destCoords.lat, destCoords.lng], { icon: cabIcon }).addTo(map);
+        }
+
+        // Animate marker from destination to pickup (simulating arrival), then to destination (simulating trip)
+        let startTime = null;
+        const duration = 4000; // 4 seconds animation
+
+        function animateCab(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = (timestamp - startTime) / duration;
+            
+            if (progress < 1) {
+                // Move from destination to pickup
+                const lat = destCoords.lat + (pickupCoords.lat - destCoords.lat) * progress;
+                const lng = destCoords.lng + (pickupCoords.lng - destCoords.lng) * progress;
+                
+                if (isGoogleMaps) {
+                    cabMarker.setPosition({ lat: lat, lng: lng });
+                } else {
+                    cabMarker.setLatLng([lat, lng]);
+                }
+                
+                requestAnimationFrame(animateCab);
+            } else {
+                // Arrived at pickup!
+                tripStatusText.innerHTML = `<span style="color: var(--accent-emerald); font-weight:800;">Cab Arrived!</span> Starting trip to destination...`;
+                
+                setTimeout(() => {
+                    startTime = null;
+                    requestAnimationFrame(animateCabTrip);
+                }, 1500);
+            }
+        }
+
+        function animateCabTrip(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = (timestamp - startTime) / duration;
+            
+            if (progress < 1) {
+                // Move from pickup to destination
+                const lat = pickupCoords.lat + (destCoords.lat - pickupCoords.lat) * progress;
+                const lng = pickupCoords.lng + (destCoords.lng - pickupCoords.lng) * progress;
+                
+                if (isGoogleMaps) {
+                    cabMarker.setPosition({ lat: lat, lng: lng });
+                } else {
+                    cabMarker.setLatLng([lat, lng]);
+                }
+                
+                requestAnimationFrame(animateCabTrip);
+            } else {
+                // Arrived at destination!
+                tripStatusText.innerHTML = `<span style="color: var(--accent-blue); font-weight:800;"><i class="fa-solid fa-circle-check"></i> Ride Completed!</span> Hope you enjoyed CineCab!`;
+                
+                // Final clean up
+                setTimeout(() => {
+                    tripOverlay.style.display = "none";
+                    bookBtn.disabled = false;
+                }, 3000);
+            }
+        }
+
+        requestAnimationFrame(animateCab);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile Settings - Flipkart Style{% endblock %}
+
+{% block content %}
+<div class="hub-header" style="margin-bottom: 2rem; text-align: left;">
+    <span class="badge badge-info"><i class="fa-solid fa-cart-shopping"></i> Shopping Portal</span>
+    <h1 style="font-size: 2.25rem; margin-top: 0.5rem;">Account Manager</h1>
+    <p style="color: var(--text-secondary);">Manage your personal details, email subscription settings, and billing/shipping addresses.</p>
+</div>
+
+<div class="profile-container">
+    <!-- Sidebar (Flipkart Style Menu) -->
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Profile Banner -->
+        <div class="card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background-color: var(--bg-tertiary);">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--text-secondary);">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Hello,</span>
+                <h4 style="font-size: 1.1rem; word-break: break-all;">
+                    {% if profile.name %}{{ profile.name }}{% else %}{{ user.username }}{% endif %}
+                </h4>
+            </div>
+        </div>
+
+        <!-- Sidebar Navigation Options -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="border-bottom: 1px solid var(--border-color); padding: 1.25rem; font-weight: 700; color: var(--accent-blue); display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-folder-open"></i> ACCOUNT SETTINGS
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <a href="#" class="nav-link active" style="padding: 1rem 1.5rem; border-left: 3px solid var(--accent-blue); background-color: rgba(59, 130, 246, 0.05); color: var(--text-primary); font-weight: 600;">
+                    <i class="fa-solid fa-user-pen" style="margin-right: 0.75rem;"></i> Profile Information
+                </a>
+                <a href="#" class="nav-link" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                    <i class="fa-solid fa-address-book" style="margin-right: 0.75rem;"></i> Manage Addresses
+                </a>
+                <a href="#" class="nav-link" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+                    <i class="fa-solid fa-wallet" style="margin-right: 0.75rem;"></i> Gift Cards & Wallet
+                </a>
+                <a href="#" class="nav-link" style="padding: 1rem 1.5rem;">
+                    <i class="fa-solid fa-heart" style="margin-right: 0.75rem;"></i> My Wishlist
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="card" style="padding: 2.5rem;">
+        <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-id-card" style="color: var(--accent-blue);"></i> Edit Profile Details
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 2.5rem; align-items: start;">
+                <!-- Avatar Upload Panel -->
+                <div class="profile-sidebar">
+                    <div class="profile-avatar-wrapper" id="avatarPreviewContainer">
+                        {% if profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" id="avatarPreview" class="profile-avatar-img" alt="Profile Picture">
+                        {% else %}
+                            <div id="avatarPlaceholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--text-secondary); background-color: var(--bg-tertiary);">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <img src="" id="avatarPreview" class="profile-avatar-img" alt="Profile Picture" style="display: none;">
+                        {% endif %}
+                        <label class="profile-avatar-upload" for="profile_picture">
+                            <i class="fa-solid fa-camera"></i> UPLOAD
+                        </label>
+                    </div>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Allowed: JPG, PNG. Max 2MB</span>
+                </div>
+
+                <!-- Fields Panel -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="grid-2" style="gap: 1.5rem;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="name">Display Name</label>
+                            <input type="text" id="name" name="name" value="{{ profile.name }}" class="form-control" placeholder="Enter name">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" for="phone_number">Phone Number</label>
+                            <input type="text" id="phone_number" name="phone_number" value="{{ profile.phone_number }}" class="form-control" placeholder="Enter phone number">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control" placeholder="yourname@email.com">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="delivery_address">Delivery Address</label>
+                        <textarea id="delivery_address" name="delivery_address" class="form-control" placeholder="Enter full shipping/delivery address details..." style="min-height: 120px;">{{ profile.delivery_address }}</textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+                        <a href="/" class="btn btn-secondary"><i class="fa-solid fa-xmark"></i> Cancel</a>
+                        <button type="submit" class="btn btn-emerald" style="padding: 0.75rem 2.5rem;"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const preview = document.getElementById("avatarPreview");
+                const placeholder = document.getElementById("avatarPlaceholder");
+                
+                preview.src = e.target.result;
+                preview.style.display = "block";
+                
+                if (placeholder) {
+                    placeholder.style.display = "none";
+                }
+            };
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}
